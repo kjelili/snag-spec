@@ -1,0 +1,7 @@
+﻿python : Error: 'charmap' codec can't encode character '\U0001f3af' in position 367: character maps to <undefined>
+At C:\Users\DeLL\AppData\Local\Temp\ps-script-2e6c3f56-7759-432c-b687-7f4c0b081159.ps1:82 char:1
++ python read_doc.py 2>&1 | Out-File -Encoding utf8 doc_output.txt; Get ...
++ ~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Error: 'charmap... to <undefined>:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

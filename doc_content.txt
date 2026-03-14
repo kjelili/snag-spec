@@ -1,0 +1,458 @@
+App Concept: Snag-to-Spec
+One-Line Pitch
+Snag-to-Spec is an AI-powered contract intelligence platform that transforms construction defects (“snags”) into contract-compliant Architect’s Instructions, automatically linked to the correct clauses in the JCT Building Contract, saving architects and contract administrators hours per project and reducing dispute risk.
+🎯 Core Problem It Solves (Expanded)
+Current reality:
+Snags are logged in spreadsheets, PDFs, or site apps.
+Contract clauses are checked manually (or not at all).
+Architect’s Instructions (AIs) are drafted from templates under time pressure.
+Mis-referenced clauses → invalid instructions, disputes, or payment issues.
+Snag-to-Spec closes the gap between site reality and contractual authority.
+🧠 How the App Works (End-to-End)
+1. Snag Capture (Site or Desktop)
+Architect or CA logs a snag:
+Text (“Poorly installed fire stopping at riser – Level 3”)
+Photos / video
+Location (drawing ref / room / grid)
+Severity (cosmetic / safety / compliance)
+Supports:
+Mobile (tablet/phone)
+Voice-to-text on site
+Bulk snag import (Excel / Procore / Fieldwire)
+2. Contract Intelligence Engine
+The AI analyses:
+Snag description
+Project metadata (contract type, employer’s requirements)
+Selected JCT form (e.g. SBC, DB, ICD)
+It then:
+Identifies relevant clauses (e.g. workmanship, materials, statutory compliance)
+Determines instruction authority (Architect vs Contract Administrator)
+Confirms whether it is:
+A defect obligation
+A compliance issue
+A change (⚠ potential variation)
+3. Clause-Linked Snag Validation
+Each snag is automatically tagged with:
+Clause number(s)
+Clause summary (plain English)
+Risk flag:
+🟢 Clear defect
+🟡 Ambiguous (needs human confirmation)
+🔴 Potential variation / cost implication
+This protects the architect from accidentally issuing an invalid instruction.
+4. Auto-Generated Architect’s Instruction (AI-Drafted)
+With one click, the app generates:
+Fully formatted Architect’s Instruction
+Correct JCT clause references
+Clear instruction wording
+Optional compliance deadline
+Optional inspection re-signoff requirement
+Output formats:
+PDF (signed / unsigned)
+Word
+Email-ready
+Common Data Environment (CDE) upload
+📄 Example Output (Before vs After)
+Before (Manual):
+“Please rectify defective fire stopping at riser.”
+After (Snag-to-Spec):
+“Pursuant to Clause 2.1 of the JCT Standard Building Contract, you are instructed to remedy defective fire stopping at Level 3 riser, which does not comply with the Contract Documents or statutory fire safety requirements. Works to be completed within 7 days.”
+🧩 Key Features (Expanded)
+🔍 Contract Clause Mapping
+JCT clause database (versioned by year)
+Employer’s Requirements ingestion
+Project-specific amendments support
+⚠️ Variation Risk Detection
+The AI explicitly flags:
+Instructions that may constitute a change
+Snags caused by design ambiguity
+Employer-driven scope creep
+This is hugely valuable commercially and legally.
+🗂️ Evidence & Audit Trail
+Every AI decision stores:
+Snag text
+Clause mapping rationale
+User confirmations
+Issued instruction history
+This creates defensible records in disputes or adjudication.
+🔁 Feedback Loop
+Architects can:
+Approve / edit AI clause mapping
+Override instruction wording
+Train the model to firm-specific standards
+🏛️ Legal & Ethical Safeguards (Critical Modification)
+To make this viable:
+✅ Human-in-the-Loop (Mandatory)
+AI drafts, humans issue
+Clear disclaimers
+No autonomous issuing of contractual instructions
+⚖️ Contract Version Control
+Explicit selection of:
+JCT edition
+Amendments
+Project-specific deviations
+No “generic” clause referencing allowed.
+🧱 Suggested Tech Architecture (High Level)
+Frontend: React + mobile-first UI
+Backend: FastAPI
+AI Layer:
+Clause retrieval (vector DB)
+GPT-based reasoning with guardrails
+Data: PostgreSQL + document store
+Security: ISO-aligned audit logs (important for legal users)
+💰 Commercial Model (Refined)
+Target Users
+Architectural practices
+Contract Administrators
+Employers’ Agents
+Large contractors (CA role)
+Pricing
+Per-project licence
+Practice-wide subscription
+Enterprise (multi-project + clause library)
+🚀 Why This Is a Strong Idea
+This is not just snagging software.
+It is:
+Contract intelligence
+Risk reduction tooling
+Admin automation
+Dispute avoidance infrastructure
+It directly addresses professional indemnity risk, which makes buyers pay attention.
+🔜 Logical Next Steps (If You Want to Proceed)
+Define supported JCT forms (start with SBC 2016/2024)
+Design clause-snag ontology
+Build MVP with:
+Snag input
+Clause retrieval
+AI instruction draft
+Pilot with 1–2 architectural practices
+1) Data model (implementation-ready)
+The model needs to do three things well:
+Represent the contract correctly (form + edition + project-specific amendments + clause library/versioning)
+Represent snags with evidence (photos, location, severity, compliance)
+Generate and govern “Architect’s Instruction” drafts (clause-linked, approved, issued, audited)
+Below is a practical relational model (PostgreSQL-friendly). You can implement as tables or as ORM models.
+A. Core reference tables
+organizations
+id (pk)
+name
+type (architect_practice, contractor, client, consultant)
+address_json
+created_at
+users
+id (pk)
+organization_id (fk organizations.id)
+name
+email (unique)
+role (architect, contract_admin, employers_agent, pm, site_manager, qs, viewer)
+is_active
+created_at
+projects
+id (pk)
+organization_id (fk organizations.id) — owner/tenant
+name
+site_address_json
+timezone (default Europe/London)
+status (precon, construction, defects_period, closed)
+created_at
+parties
+id (pk)
+project_id (fk)
+party_type (employer, contractor, architect, ca, employers_agent, pd, pc)
+organization_id (fk organizations.id)
+contact_name
+contact_email
+contact_phone
+B. Contract & clause library (versioning + amendments)
+You must separate: “a clause as published” vs “a clause as amended for this project”.
+contract_forms
+id (pk)
+publisher (JCT)
+form_code (e.g. SBC/Q, SBC/XQ, DB)
+form_name
+notes
+contract_editions
+id (pk)
+contract_form_id (fk)
+edition_year (e.g. 2016, 2024)
+edition_label (e.g. “JCT 2016 Edition”)
+effective_date (optional)
+source_reference (where you obtained the clause library)
+clause_nodes (the stable identity of a clause across versions)
+id (pk)
+contract_edition_id (fk)
+clause_number (e.g. 2.1, 3.18, 2.38)
+clause_title (short)
+canonical_path (e.g. section=3 quality/defects)
+is_active
+clause_versions (the text can change across editions; you can also track publisher updates)
+id (pk)
+clause_node_id (fk)
+version_label (e.g. “published”, “errata-1”)
+clause_text (full text; store securely)
+plain_english_summary (your internal summary)
+obligations_json (structured extraction: who/what/when)
+created_at
+clause_tags
+id (pk)
+name (e.g. defective_work, workmanship, materials, rectification_period, instructions, variation_risk)
+clause_node_tags
+clause_node_id (fk)
+clause_tag_id (fk)
+(pk: clause_node_id, clause_tag_id)
+contracts (a project’s contract instance)
+id (pk)
+project_id (fk)
+contract_form_id (fk)
+contract_edition_id (fk)
+contract_reference (e.g. job no.)
+date_of_contract
+rectification_period_end (if known)
+contract_documents_index_json (ER/spec/drawings list)
+status (live, terminated, completed)
+contract_amendments
+id (pk)
+contract_id (fk)
+amendment_name (e.g. “Schedule of Amendments Rev C”)
+amendment_document_id (fk documents.id)
+effective_date
+notes
+contract_clause_overrides (project-specific clause modifications)
+id (pk)
+contract_id (fk)
+clause_node_id (fk) — which published clause it alters
+override_type (replace_text, append_text, delete_text, re_number, supplementary_provision)
+override_text
+human_summary
+precedence_order (int) — resolves multiple amendments
+created_by (fk users.id)
+created_at
+Why this matters: clause numbers and wording vary by form/edition and amendments; defects and instruction powers also vary. This structure lets you maintain “truth” per project. (For example, SBC/Q 2016 includes clauses for defects schedules and making good; content pages show 2.38/2.39 in that form. (jctltd.co.uk))
+C. Snagging domain
+defect_types (your controlled taxonomy)
+id (pk)
+name (e.g. “Fire stopping non-compliance”)
+category (quality, safety, compliance, incomplete, damage)
+default_severity (low, med, high, critical)
+typical_keywords (text[])
+locations
+id (pk)
+project_id (fk)
+building
+level
+zone
+room
+grid_ref
+drawing_ref
+bim_guid (optional)
+gps_lat, gps_lng (optional)
+snags
+id (pk)
+project_id (fk)
+contract_id (fk)
+created_by (fk users.id)
+defect_type_id (fk)
+title
+description
+location_id (fk)
+status (new, triage, needs_info, ready_to_instruct, instructed, in_progress, fixed_pending_verify, closed)
+severity (low, med, high, critical)
+compliance_flag (bool)
+variation_risk (low, med, high) — model output + human override
+discovered_at
+due_by (optional)
+closed_at (optional)
+snag_media
+id (pk)
+snag_id (fk)
+document_id (fk documents.id)
+media_type (photo, video, pdf, other)
+captured_at
+caption
+snag_comments
+id (pk)
+snag_id (fk)
+author_id (fk users.id)
+body
+created_at
+D. Instruction drafting/issuing + governance
+instructions
+id (pk)
+project_id (fk)
+contract_id (fk)
+snag_id (fk, nullable) — allow multi-snag instruction via join table if desired
+instruction_type (architect_instruction, ca_instruction, ea_instruction, site_notice)
+ai_reference (human-readable ref like AI-2026-0012)
+subject
+body_markdown
+status (draft, review, approved, issued, withdrawn, superseded)
+issued_to_party_id (fk parties.id) — usually contractor
+issued_by_user_id (fk users.id)
+issued_at (nullable until issued)
+response_required_by (date nullable)
+delivery_method (email, cde, printed, other)
+pdf_document_id (fk documents.id, nullable)
+instruction_clause_links
+id (pk)
+instruction_id (fk)
+clause_node_id (fk)
+clause_version_id (fk)
+project_clause_text_snapshot (optional) — store snapshot used at issue time
+relevance_score (numeric) — retrieval score
+link_reason (short text: why it links)
+approvals
+id (pk)
+object_type (instruction, snag_clause_mapping)
+object_id (uuid)
+requested_by (fk users.id)
+approver_id (fk users.id)
+status (pending, approved, rejected)
+decision_note
+decided_at
+audit_log
+id (pk)
+project_id (fk)
+actor_id (fk users.id)
+action (e.g. SNAG_CREATED, CLAUSE_LINKED, INSTRUCTION_ISSUED)
+object_type
+object_id
+before_json
+after_json
+created_at
+ip_address (optional)
+E. Documents & integrations
+documents
+id (pk)
+project_id (fk)
+storage_uri
+filename
+mime_type
+sha256
+uploaded_by (fk users.id)
+created_at
+integration_targets (optional)
+id (pk)
+project_id (fk)
+type (procore, fieldwire, asite, viewpoint, email_smtp, sharepoint)
+config_json (encrypted)
+enabled
+2) Draft sample Architect’s Instructions (templates you can ship)
+These are drafts your app can generate. Keep them editable and include a “Potential Variation” warning when appropriate.
+AI Sample 1 — Defective fire stopping (compliance-critical)
+Architect’s Instruction (Draft)
+Project: [Project Name]
+Contract: JCT [Form/Edition]
+AI Ref: [AI-XXXX]
+Date: [DD/MM/YYYY]
+To: [Contractor legal entity + address / email]
+Subject: Remedy defective fire stopping at [Location]
+You are instructed to make good defective fire stopping at [Building/Level/Room/Grid]. The installation is not in accordance with the Contract Documents and applicable statutory/compliance requirements.
+Required action
+Remove/replace non-compliant fire stopping materials and reinstate compliant fire stopping to the full perimeter of services penetrations at the above location(s).
+Provide product data and installation method statement prior to commencement.
+Provide photographic evidence and access for inspection upon completion.
+Timescale: Complete within [X] days of this instruction.
+Inspection: Notify the Architect/CA at least [24/48] hours before inspection.
+Contract basis (clause references): [Auto-insert clause links as per selected form/edition].
+Note: If you consider any part of this instruction constitutes a Variation, notify in accordance with the Contract procedures before execution.
+AI Sample 2 — Poor workmanship finish (cosmetic but contractual)
+Subject: Make good plaster finish – [Location]
+You are instructed to make good the plaster finish at [Location], including filling, sanding, and redecoration, to achieve the specified finish standard under the Contract Documents.
+Required action
+Prepare surfaces and redecorate to match adjacent finishes.
+Protect surrounding completed work.
+Provide sample/approval if specified.
+Timescale: [X] working days.
+Contract basis: [Clause links].
+Note: This is issued as a quality/defects instruction; if you allege design/spec ambiguity, raise an RFI immediately.
+AI Sample 3 — Incorrect door set / ironmongery (spec non-conformance)
+Subject: Replace door set and ironmongery to specification – [Door ID / Location]
+You are instructed to replace the installed door set/ironmongery at [Door ID, Location] as it is not in compliance with the Contract Documents (e.g., rating, dimensions, ironmongery schedule, accessibility requirements).
+Required action
+Remove non-compliant door/ironmongery.
+Install compliant set as per [spec section/drawing ref].
+Provide certification (e.g., fire rating evidence) where applicable.
+Timescale: [X] days.
+Contract basis: [Clause links].
+Potential variation check: If the Contract Documents are inconsistent, notify prior to replacement.
+AI Sample 4 — Water ingress / waterproofing defect (high risk)
+Subject: Investigate and remedy water ingress – [Location]
+You are instructed to investigate and remedy reported water ingress at [Location].
+Required action
+Undertake intrusive investigation as necessary to identify cause(s).
+Propose remediation method and sequencing for review prior to commencement.
+Remedy defect and reinstate finishes.
+Provide test results (flood test / moisture readings) as applicable.
+Timescale: Investigation within [X] days, remediation within [Y] days thereafter.
+Contract basis: [Clause links].
+Note: This instruction relates to defects/quality. If you contend the cause is employer change or third-party damage, provide evidence.
+AI Sample 5 — Incomplete works at/near Practical Completion
+Subject: Complete outstanding minor works – [List/Locations]
+You are instructed to complete the outstanding minor works listed below and provide notice when complete for re-inspection:
+[Item 1 + location]
+[Item 2 + location]
+…
+Timescale: [X] working days.
+Contract basis: [Clause links].
+Note: This does not constitute acceptance of non-compliance for any other elements.
+3) Mapping JCT clauses to defect types (starter ruleset)
+Important reality check (so your app stays accurate)
+Clause numbering and powers vary by JCT form and edition. Your mapping engine must start by selecting the form + edition and then pull candidate clauses from that edition’s library. JCT’s own 2016 info booklet notes the contractor’s general obligations (e.g., “carry out and complete … in compliance with the Contract Documents” in clause 2.1 across JCT 2016 context). (corporate.jctltd.co.uk)
+For SBC/Q 2016 specifically, the contents pages show where “Defects” processes sit (e.g., 2.38 Schedules of defects and instructions and 2.39 Certificate of Making Good). (jctltd.co.uk)
+SBC/XQ 2016 contents pages show quality/defects handling clauses around 3.18–3.20 (work not in accordance / workmanship / executed work). (jctltd.co.uk)
+JCT commentary on rectification periods reinforces that “rectification period” is not a limit on latent defects liability; it affects the process, not whether defects can exist. (corporate.jctltd.co.uk)
+A. Defect-type → clause-tag mapping (form-agnostic)
+Build your first pass as defect types → clause tags, not hard-coded numbers:
+Non-conforming work/materials → non_conformance, workmanship, materials, removal_replacement
+Defects during rectification period → defects, rectification_period, schedule_of_defects, making_good
+Compliance/safety (fire, accessibility, statutory) → statutory_compliance, quality, inspection_testing
+Incomplete works → completion, practical_completion_support
+Damage (post-install) → protection_of_works, make_good_damage
+Ambiguity/design discrepancy → contract_documents_priority, instructions, variation_risk
+Then your retrieval step fetches the top clauses in the project’s clause library matching those tags.
+B. SBC/Q 2016-oriented starter mapping (numbers shown where evidenced by sources)
+Use this as an initial “rules” layer for SBC/Q 2016 / SBC/XQ 2016 projects; for DB/MP/IC forms you’ll map to the equivalent clauses via tags.
+General non-compliance with Contract Documents
+Candidate basis: general obligations (2.1) + “work not in accordance / workmanship / executed work” cluster around 3.18–3.20 in SBC/XQ 2016 contents. (corporate.jctltd.co.uk)
+Defect types:
+Wrong materials installed
+Poor workmanship finish
+Incorrect install vs spec/drawings
+Missing labels, incomplete builders work to services
+Defects process (during/after Practical Completion)
+Candidate basis: 2.38 Schedules of defects and instructions + 2.39 Certificate of Making Good shown in SBC/Q 2016 contents. (jctltd.co.uk)
+Defect types:
+Defects found within rectification period
+“Return visit” snag lists
+Items needing formal close-out and certification
+Rectification period logic (risk / messaging, not a “get out of jail free”)
+Candidate basis: JCT commentary on rectification periods and liability concept. (corporate.jctltd.co.uk)
+Defect types:
+Latent defect alleged after rectification period
+Dispute where contractor argues “period expired”
+C. What your app should store for each mapping (so it stays robust)
+For each defect type mapping entry, store:
+defect_type_id
+clause_tags[] (primary)
+clause_tags[] (secondary)
+“typical evidence required” (photos, certification, test results)
+“default instruction actions” (remove/replace/make good/investigate)
+“variation_risk_heuristics” (keywords like “client requested”, “design change”, “not shown”, “new requirement”)
+“time_default_days” (severity-based)
+That avoids brittle number-based rules and makes it portable across JCT forms.
+Quick “starter pack” defect types you can seed today
+Fire stopping non-compliance (critical)
+Compartmentation/doors/fire rating non-compliance (critical)
+Waterproofing/water ingress (high)
+Structural cracking/movement (high)
+MEP functional failure (high)
+Spec/drawing non-conformance (med-high)
+Workmanship finish defects (low-med)
+Incomplete works (med)
+Damage to completed work (low-med)
+Access/maintenance non-compliance (med-high)
+If you want next, I can turn the above into:
+an ERD diagram (Mermaid) +
+SQL migrations (Postgres) +
+a clause-tagging seed file +
+an instruction generator JSON schema (so the AI always outputs structured fields, not free text).

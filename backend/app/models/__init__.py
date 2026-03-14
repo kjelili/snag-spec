@@ -1,0 +1,83 @@
+# Database models - import all models here so Alembic can detect them
+
+from app.models.organization import Organization, OrganizationType
+from app.models.user import User, UserRole
+from app.models.project import Project, ProjectStatus, Party, PartyType
+from app.models.contract import (
+    ContractForm,
+    ContractEdition,
+    ClauseNode,
+    ClauseVersion,
+    ClauseTag,
+    ClauseNodeTag,
+    Contract,
+    ContractAmendment,
+    ContractClauseOverride,
+)
+from app.models.snag import (
+    DefectType,
+    DefectCategory,
+    Location,
+    Snag,
+    SnagStatus,
+    SnagMedia,
+    MediaType,
+    SnagComment,
+    SeverityLevel,
+    VariationRiskLevel,
+)
+from app.models.instruction import (
+    Instruction,
+    InstructionType,
+    InstructionStatus,
+    DeliveryMethod,
+    InstructionClauseLink,
+    Approval,
+    ApprovalStatus,
+    ApprovalObjectType,
+    AuditLog,
+    AuditLogAction,
+)
+from app.models.document import Document, IntegrationTarget
+
+__all__ = [
+    "Organization",
+    "OrganizationType",
+    "User",
+    "UserRole",
+    "Project",
+    "ProjectStatus",
+    "Party",
+    "PartyType",
+    "ContractForm",
+    "ContractEdition",
+    "ClauseNode",
+    "ClauseVersion",
+    "ClauseTag",
+    "ClauseNodeTag",
+    "Contract",
+    "ContractAmendment",
+    "ContractClauseOverride",
+    "DefectType",
+    "DefectCategory",
+    "Location",
+    "Snag",
+    "SnagStatus",
+    "SnagMedia",
+    "MediaType",
+    "SnagComment",
+    "SeverityLevel",
+    "VariationRiskLevel",
+    "Instruction",
+    "InstructionType",
+    "InstructionStatus",
+    "DeliveryMethod",
+    "InstructionClauseLink",
+    "Approval",
+    "ApprovalStatus",
+    "ApprovalObjectType",
+    "AuditLog",
+    "AuditLogAction",
+    "Document",
+    "IntegrationTarget",
+]
