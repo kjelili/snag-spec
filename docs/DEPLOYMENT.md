@@ -61,9 +61,19 @@ npm run dev
 
 Set in `frontend/.env`:
 
+- `VITE_STORAGE_MODE` (`local` for device-owned data mode, `remote` for API mode)
 - `VITE_API_BASE_URL` (example: `http://localhost:8000/api/v1`)
 - `VITE_DEV_PROXY_TARGET` (example: `http://localhost:8000`)
 - `VITE_API_KEY` (required only if backend `API_KEY` is set)
+
+### Data ownership + personal cloud backup
+
+When `VITE_STORAGE_MODE=local`, data stays on the user's device.  
+Use `/app/data-ownership` to:
+
+- Download/import encrypted-ready JSON backups (local workflow)
+- Optionally upload/restore backups to Google Drive or OneDrive using user OAuth tokens
+- Reset local workspace safely
 
 ## 2) Production Hardening Checklist
 

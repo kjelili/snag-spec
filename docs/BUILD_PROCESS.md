@@ -115,3 +115,18 @@ This document captures the rebuild and hardening process completed for this repo
 
 - Bootstrap scripts validated for command flow and argument handling.
 - Migration file compiles and is discoverable by Alembic.
+
+## Step 7 - Local Ownership + Cloud Optional Backups
+
+### Actions
+
+- Added local-first data ownership mode in frontend data layer (`VITE_STORAGE_MODE=local`).
+- Added Data Ownership page (`/app/data-ownership`) for:
+  - Local download/import/reset
+  - Optional Google Drive upload/restore
+  - Optional OneDrive upload/restore
+- Added cloud sync helpers in `frontend/src/lib/cloudSync.ts`.
+
+### Verification
+
+- Frontend build and lint pass with local mode enabled.

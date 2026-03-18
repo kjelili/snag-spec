@@ -8,6 +8,7 @@ import SnagDetail from './pages/SnagDetail'
 import Instructions from './pages/Instructions'
 import InstructionDetail from './pages/InstructionDetail'
 import CreateSnag from './pages/CreateSnag'
+import DataOwnership from './pages/DataOwnership'
 
 function AppShell({ children }: { children: ReactNode }) {
   return <Layout>{children}</Layout>
@@ -30,6 +31,7 @@ function App() {
         <Route path="/app/snags/:id" element={<AppShell><SnagDetail /></AppShell>} />
         <Route path="/app/instructions" element={<AppShell><Instructions /></AppShell>} />
         <Route path="/app/instructions/:id" element={<AppShell><InstructionDetail /></AppShell>} />
+        <Route path="/app/data-ownership" element={<AppShell><DataOwnership /></AppShell>} />
 
         <Route path="/dashboard" element={<LegacyAppRedirect />} />
         <Route path="/snags" element={<LegacyAppRedirect />} />
@@ -37,6 +39,7 @@ function App() {
         <Route path="/snags/:id" element={<LegacyAppRedirect />} />
         <Route path="/instructions" element={<LegacyAppRedirect />} />
         <Route path="/instructions/:id" element={<LegacyAppRedirect />} />
+        <Route path="/data-ownership" element={<LegacyAppRedirect />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

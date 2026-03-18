@@ -82,6 +82,12 @@ Frontend app opens at `http://localhost:3000`, API docs at `http://localhost:800
 - Security headers and trusted-host middleware are enabled.
 - Production mode (`DEBUG=False`) requires non-default `SECRET_KEY` and `API_KEY`.
 
+## Data Ownership Mode
+
+- Set `VITE_STORAGE_MODE=local` to keep all operational data on the user's device.
+- Manage local backup/restore at `/app/data-ownership`.
+- Optional personal cloud backup targets are available for Google Drive and OneDrive via user tokens.
+
 ## Documentation
 
 - `docs/BUILD_PROCESS.md` - full rebuild and verification log

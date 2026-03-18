@@ -4,6 +4,7 @@ import {
   LayoutDashboard, 
   AlertTriangle, 
   FileText, 
+  ShieldCheck,
   Menu, 
   X,
   Building2
@@ -18,6 +19,7 @@ const navItems = [
   { path: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/app/snags', label: 'Snags', icon: AlertTriangle },
   { path: '/app/instructions', label: 'Instructions', icon: FileText },
+  { path: '/app/data-ownership', label: 'Data ownership', icon: ShieldCheck },
 ]
 
 export default function Layout({ children }: LayoutProps) {
