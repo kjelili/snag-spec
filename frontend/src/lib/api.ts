@@ -113,23 +113,27 @@ const normalizeInstructionType = (
 }
 
 const buildDefaultDb = (): LocalDb => {
-  const projectId = newId()
-  const contractId = newId()
-  const userId = newId()
-  const defectTypeFireId = newId()
-  const defectTypeWaterId = newId()
-
   return {
-    projects: [{ id: projectId, name: 'Demo Tower Refurbishment' }],
-    contracts: [{ id: contractId, project_id: projectId, label: 'DEMO-CONTRACT-001' }],
-    users: [{ id: userId, name: 'Lead Architect' }],
-    defect_types: [
-      { id: defectTypeFireId, name: 'Fire stopping non-compliance' },
-      { id: defectTypeWaterId, name: 'Waterproofing/water ingress' },
-    ],
+    projects: [],
+    contracts: [],
+    users: [],
+    defect_types: [],
     snags: [],
     instructions: [],
   }
+}
+
+const hasLegacyDemoSeed = (db: LocalDb): boolean => {
+  const hasDemoProject = db.projects.length === 1 && db.projects[0].name === 'Demo Tower Refurbishment'
+  const hasDemoContract = db.contracts.length === 1 && db.contracts[0].label === 'DEMO-CONTRACT-001'
+  const hasDemoUser = db.users.length === 1 && db.users[0].name === 'Lead Architect'
+  const defectNames = db.defect_types.map((item) => item.name)
+  const hasDemoDefects =
+    db.defect_types.length === 2 &&
+    defectNames.includes('Fire stopping non-compliance') &&
+    defectNames.includes('Waterproofing/water ingress')
+
+  return hasDemoProject && hasDemoContract && hasDemoUser && hasDemoDefects
 }
 
 const readLocalDb = (): LocalDb => {
@@ -150,6 +154,18 @@ const readLocalDb = (): LocalDb => {
       snags: parsed.snags ?? [],
       instructions: parsed.instructions ?? [],
     }
+
+    // One-time migration: remove old demo seed defaults for user-owned data mode.
+    if (
+      hydrated.snags.length === 0 &&
+      hydrated.instructions.length === 0 &&
+      hasLegacyDemoSeed(hydrated)
+    ) {
+      const cleared = buildDefaultDb()
+      localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(cleared))
+      return cleared
+    }
+
     return hydrated
   } catch {
     const db = buildDefaultDb()
