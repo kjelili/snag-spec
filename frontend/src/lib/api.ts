@@ -72,6 +72,19 @@ interface LocalDb {
   instructions: Instruction[]
 }
 
+const STARTER_DEFECT_TYPE_NAMES = [
+  'Fire stopping non-compliance',
+  'Compartmentation/doors/fire rating non-compliance',
+  'Waterproofing/water ingress',
+  'Structural cracking/movement',
+  'MEP functional failure',
+  'Spec/drawing non-conformance',
+  'Workmanship finish defects',
+  'Incomplete works',
+  'Damage to completed work',
+  'Access/maintenance non-compliance',
+]
+
 const LOCAL_DB_KEY = 'snag-spec-local-db-v1'
 const STORAGE_MODE = (import.meta.env.VITE_STORAGE_MODE || 'local').toLowerCase()
 const isLocalMode = STORAGE_MODE === 'local'
@@ -117,7 +130,7 @@ const buildDefaultDb = (): LocalDb => {
     projects: [],
     contracts: [],
     users: [],
-    defect_types: [],
+    defect_types: STARTER_DEFECT_TYPE_NAMES.map((name) => ({ id: newId(), name })),
     snags: [],
     instructions: [],
   }
@@ -164,6 +177,12 @@ const readLocalDb = (): LocalDb => {
       const cleared = buildDefaultDb()
       localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(cleared))
       return cleared
+    }
+
+    // Ensure defect type dropdown always has useful values in local mode.
+    if (hydrated.defect_types.length === 0) {
+      hydrated.defect_types = STARTER_DEFECT_TYPE_NAMES.map((name) => ({ id: newId(), name }))
+      localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(hydrated))
     }
 
     return hydrated
@@ -418,6 +437,32 @@ export const snagsApi = {
       name: normalized,
     }
     db.users.push(created)
+    writeLocalDb(db)
+    return asResponse(created)
+  },
+
+  createDefectTypeOption: (name: string) => {
+    if (!isLocalMode) {
+      return Promise.reject(new Error('Defect type creation from this screen is only available in local mode.'))
+    }
+    const normalized = name.trim()
+    if (!normalized) {
+      return Promise.reject(new Error('Defect type name is required.'))
+    }
+
+    const db = readLocalDb()
+    const existing = db.defect_types.find(
+      (defectType) => defectType.name.toLowerCase() === normalized.toLowerCase()
+    )
+    if (existing) {
+      return asResponse(existing)
+    }
+
+    const created: SnagFormOption = {
+      id: newId(),
+      name: normalized,
+    }
+    db.defect_types.push(created)
     writeLocalDb(db)
     return asResponse(created)
   },

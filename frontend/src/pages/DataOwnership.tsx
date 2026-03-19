@@ -29,6 +29,7 @@ export default function DataOwnership() {
   const [newProjectName, setNewProjectName] = useState('')
   const [newContractName, setNewContractName] = useState('')
   const [newUserName, setNewUserName] = useState('')
+  const [newDefectTypeName, setNewDefectTypeName] = useState('')
   const [selectedProjectId, setSelectedProjectId] = useState('')
 
   const [googleToken, setGoogleToken] = useState('')
@@ -81,6 +82,19 @@ export default function DataOwnership() {
     },
     onError: (error) => {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to create user.')
+    },
+  })
+
+  const createDefectTypeMutation = useMutation({
+    mutationFn: (name: string) => snagsApi.createDefectTypeOption(name).then((res) => res.data),
+    onSuccess: (defectType) => {
+      setStatusMessage(`Defect type created: ${defectType.name}`)
+      setErrorMessage('')
+      setNewDefectTypeName('')
+      queryClient.invalidateQueries({ queryKey: ['snag-meta-options'] })
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to create defect type.')
     },
   })
 
@@ -283,6 +297,24 @@ export default function DataOwnership() {
             </button>
           </div>
         </div>
+        <div className="space-y-3">
+          <label className="text-sm font-medium text-gray-700">Create defect type</label>
+          <div className="flex gap-2">
+            <input
+              value={newDefectTypeName}
+              onChange={(event) => setNewDefectTypeName(event.target.value)}
+              placeholder="Defect type name"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+            <button
+              disabled={!localModeEnabled || busy || createDefectTypeMutation.isPending || !newDefectTypeName.trim()}
+              onClick={() => createDefectTypeMutation.mutate(newDefectTypeName)}
+              className="px-3 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50 disabled:opacity-50"
+            >
+              {createDefectTypeMutation.isPending ? 'Adding...' : 'Add'}
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <p className="text-sm font-medium text-gray-700 mb-2">Current projects</p>
@@ -323,6 +355,20 @@ export default function DataOwnership() {
                 </ul>
               ) : (
                 <p className="text-sm text-gray-500">No users yet.</p>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">Current defect types</p>
+            <div className="rounded-lg border border-gray-200 p-3 max-h-36 overflow-auto">
+              {metaOptions?.defect_types.length ? (
+                <ul className="space-y-1 text-sm text-gray-700">
+                  {metaOptions.defect_types.map((defectType) => (
+                    <li key={defectType.id}>{defectType.name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No defect types yet.</p>
               )}
             </div>
           </div>

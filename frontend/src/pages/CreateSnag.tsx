@@ -23,6 +23,7 @@ export default function CreateSnag() {
   const [newProjectName, setNewProjectName] = useState('')
   const [newContractName, setNewContractName] = useState('')
   const [newUserName, setNewUserName] = useState('')
+  const [newDefectTypeName, setNewDefectTypeName] = useState('')
   const [metaActionError, setMetaActionError] = useState('')
   const localModeEnabled = useMemo(() => isLocalStorageMode(), [])
   const { register, handleSubmit, watch, getValues, setValue, formState: { errors } } = useForm<SnagFormData>({
@@ -96,6 +97,19 @@ export default function CreateSnag() {
     },
     onError: (error) => {
       setMetaActionError(error instanceof Error ? error.message : 'Unable to add user.')
+    },
+  })
+
+  const createDefectTypeMutation = useMutation({
+    mutationFn: (name: string) => snagsApi.createDefectTypeOption(name).then((res) => res.data),
+    onSuccess: (defectType) => {
+      setMetaActionError('')
+      setNewDefectTypeName('')
+      queryClient.invalidateQueries({ queryKey: ['snag-meta-options'] })
+      setValue('defect_type_id', defectType.id)
+    },
+    onError: (error) => {
+      setMetaActionError(error instanceof Error ? error.message : 'Unable to add defect type.')
     },
   })
 
@@ -323,6 +337,28 @@ export default function CreateSnag() {
             </select>
             {errors.defect_type_id && (
               <p className="mt-1 text-sm text-red-600">{errors.defect_type_id.message}</p>
+            )}
+            <div className="mt-3 flex gap-2">
+              <input
+                type="text"
+                value={newDefectTypeName}
+                onChange={(event) => setNewDefectTypeName(event.target.value)}
+                placeholder="New defect type"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <button
+                type="button"
+                disabled={!localModeEnabled || createDefectTypeMutation.isPending || !newDefectTypeName.trim()}
+                onClick={() => createDefectTypeMutation.mutate(newDefectTypeName)}
+                className="px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {createDefectTypeMutation.isPending ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+            {!localModeEnabled && (
+              <p className="mt-1 text-xs text-gray-500">
+                Add defect type is available in local mode. For remote mode, manage defect types in backend.
+              </p>
             )}
           </div>
 
