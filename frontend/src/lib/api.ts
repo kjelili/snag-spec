@@ -397,6 +397,30 @@ export const snagsApi = {
     writeLocalDb(db)
     return asResponse(created)
   },
+
+  createUserOption: (name: string) => {
+    if (!isLocalMode) {
+      return Promise.reject(new Error('User creation from this screen is only available in local mode.'))
+    }
+    const normalized = name.trim()
+    if (!normalized) {
+      return Promise.reject(new Error('User name is required.'))
+    }
+
+    const db = readLocalDb()
+    const existing = db.users.find((user) => user.name.toLowerCase() === normalized.toLowerCase())
+    if (existing) {
+      return asResponse(existing)
+    }
+
+    const created: SnagFormOption = {
+      id: newId(),
+      name: normalized,
+    }
+    db.users.push(created)
+    writeLocalDb(db)
+    return asResponse(created)
+  },
 }
 
 export const instructionsApi = {

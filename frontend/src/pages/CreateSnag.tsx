@@ -22,6 +22,7 @@ export default function CreateSnag() {
   const queryClient = useQueryClient()
   const [newProjectName, setNewProjectName] = useState('')
   const [newContractName, setNewContractName] = useState('')
+  const [newUserName, setNewUserName] = useState('')
   const [metaActionError, setMetaActionError] = useState('')
   const localModeEnabled = useMemo(() => isLocalStorageMode(), [])
   const { register, handleSubmit, watch, getValues, setValue, formState: { errors } } = useForm<SnagFormData>({
@@ -47,6 +48,7 @@ export default function CreateSnag() {
   )
 
   const hasProjects = (metaOptions?.projects.length ?? 0) > 0
+  const hasContracts = (metaOptions?.contracts.length ?? 0) > 0
   const hasUsers = (metaOptions?.users.length ?? 0) > 0
 
   const createMutation = useMutation({
@@ -81,6 +83,19 @@ export default function CreateSnag() {
     },
     onError: (error) => {
       setMetaActionError(error instanceof Error ? error.message : 'Unable to add contract.')
+    },
+  })
+
+  const createUserMutation = useMutation({
+    mutationFn: (name: string) => snagsApi.createUserOption(name).then((res) => res.data),
+    onSuccess: (user) => {
+      setMetaActionError('')
+      setNewUserName('')
+      queryClient.invalidateQueries({ queryKey: ['snag-meta-options'] })
+      setValue('created_by', user.id)
+    },
+    onError: (error) => {
+      setMetaActionError(error instanceof Error ? error.message : 'Unable to add user.')
     },
   })
 
@@ -149,9 +164,9 @@ export default function CreateSnag() {
           </div>
         )}
 
-        {!isMetaLoading && (!hasProjects || !hasUsers) && (
+        {!isMetaLoading && (!hasProjects || !hasContracts || !hasUsers) && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
-            Required setup data is missing. Add at least one project, contract, and user in the database.
+            Required setup data is missing. Add at least one project, contract, and user before creating a snag.
           </div>
         )}
 
@@ -361,6 +376,28 @@ export default function CreateSnag() {
           {errors.created_by && (
             <p className="mt-1 text-sm text-red-600">{errors.created_by.message}</p>
           )}
+            <div className="mt-3 flex gap-2">
+              <input
+                type="text"
+                value={newUserName}
+                onChange={(event) => setNewUserName(event.target.value)}
+                placeholder="New user name"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <button
+                type="button"
+                disabled={!localModeEnabled || createUserMutation.isPending || !newUserName.trim()}
+                onClick={() => createUserMutation.mutate(newUserName)}
+                className="px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {createUserMutation.isPending ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+            {!localModeEnabled && (
+              <p className="mt-1 text-xs text-gray-500">
+                Add user is available in local mode. For remote mode, create users in backend.
+              </p>
+            )}
         </div>
 
         {/* Actions */}
@@ -373,7 +410,7 @@ export default function CreateSnag() {
           </Link>
           <button
             type="submit"
-            disabled={createMutation.isPending || !hasProjects || !hasUsers}
+            disabled={createMutation.isPending || !hasProjects || !hasContracts || !hasUsers}
             className="inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Save className="w-4 h-4" />

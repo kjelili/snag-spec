@@ -28,6 +28,7 @@ export default function DataOwnership() {
   const [busy, setBusy] = useState(false)
   const [newProjectName, setNewProjectName] = useState('')
   const [newContractName, setNewContractName] = useState('')
+  const [newUserName, setNewUserName] = useState('')
   const [selectedProjectId, setSelectedProjectId] = useState('')
 
   const [googleToken, setGoogleToken] = useState('')
@@ -67,6 +68,19 @@ export default function DataOwnership() {
     },
     onError: (error) => {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to create contract.')
+    },
+  })
+
+  const createUserMutation = useMutation({
+    mutationFn: (name: string) => snagsApi.createUserOption(name).then((res) => res.data),
+    onSuccess: (user) => {
+      setStatusMessage(`User created: ${user.name}`)
+      setErrorMessage('')
+      setNewUserName('')
+      queryClient.invalidateQueries({ queryKey: ['snag-meta-options'] })
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to create user.')
     },
   })
 
@@ -251,6 +265,24 @@ export default function DataOwnership() {
             </div>
           </div>
         </div>
+        <div className="space-y-3">
+          <label className="text-sm font-medium text-gray-700">Create user</label>
+          <div className="flex gap-2">
+            <input
+              value={newUserName}
+              onChange={(event) => setNewUserName(event.target.value)}
+              placeholder="User name"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+            <button
+              disabled={!localModeEnabled || busy || createUserMutation.isPending || !newUserName.trim()}
+              onClick={() => createUserMutation.mutate(newUserName)}
+              className="px-3 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50 disabled:opacity-50"
+            >
+              {createUserMutation.isPending ? 'Adding...' : 'Add'}
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <p className="text-sm font-medium text-gray-700 mb-2">Current projects</p>
@@ -277,6 +309,20 @@ export default function DataOwnership() {
                 </ul>
               ) : (
                 <p className="text-sm text-gray-500">No contracts yet.</p>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">Current users</p>
+            <div className="rounded-lg border border-gray-200 p-3 max-h-36 overflow-auto">
+              {metaOptions?.users.length ? (
+                <ul className="space-y-1 text-sm text-gray-700">
+                  {metaOptions.users.map((user) => (
+                    <li key={user.id}>{user.name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No users yet.</p>
               )}
             </div>
           </div>
