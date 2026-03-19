@@ -47,6 +47,42 @@
 }
 
 @layer utilities {
+  .app-card {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/60;
+  }
+
+  .app-card-hover {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-200/80;
+  }
+
+  .app-card-muted {
+    @apply rounded-2xl border border-slate-200/80 bg-slate-50/80;
+  }
+
+  .page-title {
+    @apply text-3xl font-bold tracking-tight text-slate-900;
+  }
+
+  .page-subtitle {
+    @apply mt-1 text-sm text-slate-600;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-primary-600/20 hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-soft {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-danger-soft {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-100 px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }

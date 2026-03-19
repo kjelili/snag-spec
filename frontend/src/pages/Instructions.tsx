@@ -25,8 +25,8 @@ export default function Instructions() {
       {/* Header */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Instructions</h1>
-          <p className="mt-1 text-sm text-gray-500">Architect's Instructions and Contract Documents</p>
+          <h1 className="page-title">Instructions</h1>
+          <p className="page-subtitle">Architect's Instructions and Contract Documents</p>
         </div>
       </div>
 
@@ -70,7 +70,7 @@ export default function Instructions() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
         </div>
       ) : filteredInstructions.length > 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="app-card overflow-hidden">
           <div className="divide-y divide-gray-200">
             {filteredInstructions.map((instruction) => (
               <Link
@@ -114,7 +114,7 @@ export default function Instructions() {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+        <div className="app-card p-12 text-center">
           <FileText className="mx-auto w-12 h-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium text-gray-900">No instructions found</h3>
           <p className="mt-2 text-sm text-gray-500">

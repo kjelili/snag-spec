@@ -25,12 +25,12 @@ export default function Snags() {
       {/* Header */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Snags</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage construction defects and issues</p>
+          <h1 className="page-title">Snags</h1>
+          <p className="page-subtitle">Manage construction defects and issues</p>
         </div>
         <Link
           to="/app/snags/new"
-          className="inline-flex items-center justify-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          className="btn-primary"
         >
           <Plus className="w-5 h-5" />
           <span>New Snag</span>
@@ -78,7 +78,7 @@ export default function Snags() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
         </div>
       ) : filteredSnags.length > 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="app-card overflow-hidden">
           <div className="divide-y divide-gray-200">
             {filteredSnags.map((snag) => (
               <Link
@@ -125,7 +125,7 @@ export default function Snags() {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+        <div className="app-card p-12 text-center">
           <AlertTriangle className="mx-auto w-12 h-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium text-gray-900">No snags found</h3>
           <p className="mt-2 text-sm text-gray-500">
@@ -134,7 +134,7 @@ export default function Snags() {
           {!searchTerm && (
             <Link
               to="/app/snags/new"
-              className="mt-6 inline-flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              className="btn-primary mt-6"
             >
               <Plus className="w-5 h-5" />
               <span>Create Snag</span>

@@ -3,7 +3,7 @@ Snag API endpoints
 """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List
@@ -17,6 +17,7 @@ from app.models.snag import Snag, Location, DefectType
 from app.models.contract import Contract
 from app.models.project import Project
 from app.models.user import User
+from app.models.instruction import Instruction
 from app.services.clause_service import ClauseService
 
 router = APIRouter(prefix="/snags", tags=["snags"])
@@ -155,6 +156,32 @@ async def update_snag(
     db.commit()
     db.refresh(snag)
     return snag
+
+
+@router.delete("/{snag_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_snag(
+    snag_id: UUID,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_api_key),
+):
+    """Delete a snag and unlink related instructions."""
+    snag = db.query(Snag).filter(Snag.id == snag_id).first()
+    if not snag:
+        raise HTTPException(status_code=404, detail="Snag not found")
+
+    try:
+        db.query(Instruction).filter(Instruction.snag_id == snag_id).update(
+            {Instruction.snag_id: None},
+            synchronize_session=False,
+        )
+        db.delete(snag)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        logger.exception("Failed to delete snag")
+        raise HTTPException(status_code=500, detail="Failed to delete snag")
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/locations", response_model=LocationResponse, status_code=status.HTTP_201_CREATED)

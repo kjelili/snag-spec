@@ -30,12 +30,12 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Delivery dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">Track active defects, instruction flow, and delivery momentum</p>
+          <h1 className="page-title">Delivery dashboard</h1>
+          <p className="page-subtitle">Track active defects, instruction flow, and delivery momentum</p>
         </div>
         <Link
           to="/app/snags/new"
-          className="inline-flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          className="btn-primary"
         >
           <Plus className="w-5 h-5" />
           <span>New Snag</span>
@@ -44,7 +44,7 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="app-card app-card-hover p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Snags</p>
@@ -56,7 +56,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="app-card app-card-hover p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Open Snags</p>
@@ -68,7 +68,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="app-card app-card-hover p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Critical Snags</p>
@@ -80,7 +80,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="app-card app-card-hover p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Issued Instructions</p>
@@ -101,7 +101,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Snags */}
-        <div className="bg-white rounded-xl border border-gray-200">
+        <div className="app-card overflow-hidden">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Recent Snags</h2>
             <Link
@@ -142,7 +142,7 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Instructions */}
-        <div className="bg-white rounded-xl border border-gray-200">
+        <div className="app-card overflow-hidden">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Recent Instructions</h2>
             <Link

@@ -119,7 +119,7 @@ export default function InstructionDetail() {
           )}
 
           {/* Instruction Body */}
-          <div className="bg-white rounded-xl border border-gray-200 p-8">
+          <div className="app-card p-8">
             <div className="prose max-w-none">
               <div className="mb-6 pb-6 border-b border-gray-200">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">ARCHITECT'S INSTRUCTION</h2>
@@ -159,7 +159,7 @@ export default function InstructionDetail() {
           </div>
 
           {/* Clause References */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="app-card p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Contract Clauses</h2>
             <p className="text-sm text-gray-500">
               Clause references would appear here. In production, this would link to the specific clauses.
@@ -170,7 +170,7 @@ export default function InstructionDetail() {
         {/* Sidebar Actions */}
         <div className="space-y-6">
           {/* Actions */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="app-card p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
             <div className="space-y-3">
               {instruction.status === 'draft' && (
@@ -180,7 +180,7 @@ export default function InstructionDetail() {
                     setDraftBody(instruction.body_markdown)
                     setIsEditing(!isEditing)
                   }}
-                  className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="btn-soft w-full"
                 >
                   <Edit2 className="w-4 h-4" />
                   <span>{isEditing ? 'Cancel edit' : 'Edit draft'}</span>
@@ -190,7 +190,7 @@ export default function InstructionDetail() {
                 <button
                   onClick={() => submitMutation.mutate()}
                   disabled={submitMutation.isPending}
-                  className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="btn-soft w-full border-yellow-200 bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{submitMutation.isPending ? 'Submitting...' : 'Send for Review'}</span>
@@ -200,7 +200,7 @@ export default function InstructionDetail() {
                 <button
                   onClick={() => approveMutation.mutate()}
                   disabled={approveMutation.isPending}
-                  className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 bg-emerald-100 text-emerald-800 rounded-lg hover:bg-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="btn-soft w-full border-emerald-200 bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{approveMutation.isPending ? 'Approving...' : 'Approve instruction'}</span>
@@ -210,7 +210,7 @@ export default function InstructionDetail() {
                 <button
                   onClick={() => saveMutation.mutate()}
                   disabled={saveMutation.isPending || !draftSubject.trim() || !draftBody.trim()}
-                  className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="btn-primary w-full"
                 >
                   <Save className="w-4 h-4" />
                   <span>{saveMutation.isPending ? 'Saving...' : 'Save draft changes'}</span>
@@ -220,7 +220,7 @@ export default function InstructionDetail() {
                 <button
                   onClick={() => issueMutation.mutate()}
                   disabled={issueMutation.isPending}
-                  className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="btn-primary w-full"
                 >
                   <Send className="w-4 h-4" />
                   <span>{issueMutation.isPending ? 'Issuing...' : 'Issue Instruction'}</span>
@@ -242,7 +242,7 @@ export default function InstructionDetail() {
                   link.remove()
                   URL.revokeObjectURL(link.href)
                 }}
-                className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="btn-soft w-full"
               >
                 <Download className="w-4 h-4" />
                 <span>Download TXT</span>
@@ -256,7 +256,7 @@ export default function InstructionDetail() {
           </div>
 
           {/* Metadata */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="app-card p-6">
             <h3 className="text-sm font-semibold text-gray-900 mb-4">Details</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">

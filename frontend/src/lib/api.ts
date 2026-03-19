@@ -336,6 +336,19 @@ export const snagsApi = {
     return asResponse(updated)
   },
 
+  remove: (id: string) => {
+    if (!isLocalMode) {
+      return api.delete(`/snags/${id}`)
+    }
+    const db = readLocalDb()
+    db.snags = db.snags.filter((item) => item.id !== id)
+    db.instructions = db.instructions.map((instruction) =>
+      instruction.snag_id === id ? { ...instruction, snag_id: undefined } : instruction
+    )
+    writeLocalDb(db)
+    return asResponse(undefined)
+  },
+
   getClauseSuggestions: (id: string) => {
     if (!isLocalMode) {
       return api.get<ClauseSuggestion[]>(`/snags/${id}/clauses`)

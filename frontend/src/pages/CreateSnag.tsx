@@ -155,13 +155,13 @@ export default function CreateSnag() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create New Snag</h1>
-          <p className="mt-1 text-sm text-gray-500">Log a construction defect with full contract context</p>
+          <h1 className="page-title">Create New Snag</h1>
+          <p className="page-subtitle">Log a construction defect with full contract context</p>
         </div>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl border border-gray-200 p-8 space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="app-card p-8 space-y-6">
         <div className="flex items-start space-x-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
           <div className="flex-1">
@@ -440,14 +440,14 @@ export default function CreateSnag() {
         <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
           <Link
             to="/app/snags"
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="btn-secondary"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={createMutation.isPending || !hasProjects || !hasContracts || !hasUsers}
-            className="inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="btn-primary"
           >
             <Save className="w-4 h-4" />
             <span>{createMutation.isPending ? 'Creating...' : 'Create Snag'}</span>

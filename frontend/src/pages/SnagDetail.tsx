@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, FileText, AlertTriangle, Clock, CheckCircle2, Sparkles } from 'lucide-react'
+import { ArrowLeft, FileText, AlertTriangle, Clock, CheckCircle2, Sparkles, Trash2 } from 'lucide-react'
 import { snagsApi, instructionsApi } from '../lib/api'
 import { formatDate, formatLabel, getSeverityColor, getStatusColor } from '../lib/utils'
 
@@ -26,6 +26,23 @@ export default function SnagDetail() {
     onSuccess: (instruction) => {
       queryClient.invalidateQueries({ queryKey: ['instructions'] })
       navigate(`/app/instructions/${instruction.id}`)
+    },
+  })
+
+  const markAttendedMutation = useMutation({
+    mutationFn: () => snagsApi.update(id!, { status: 'closed' }).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['snag', id] })
+      queryClient.invalidateQueries({ queryKey: ['snags'] })
+    },
+  })
+
+  const deleteSnagMutation = useMutation({
+    mutationFn: () => snagsApi.remove(id!).then(() => undefined),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['snags'] })
+      queryClient.invalidateQueries({ queryKey: ['instructions'] })
+      navigate('/app/snags')
     },
   })
 
@@ -86,13 +103,13 @@ export default function SnagDetail() {
           )}
 
           {/* Description */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="app-card p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Description</h2>
             <p className="text-gray-700 whitespace-pre-wrap">{snag.description}</p>
           </div>
 
           {/* Metadata */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="app-card p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Details</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex items-start space-x-3">
@@ -138,7 +155,7 @@ export default function SnagDetail() {
           )}
 
           {clauseSuggestions.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="app-card p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Suggested Contract Clauses</h2>
               <div className="space-y-3">
                 {clauseSuggestions.map((clause: any, index: number) => (
@@ -163,12 +180,16 @@ export default function SnagDetail() {
         {/* Sidebar Actions */}
         <div className="space-y-6">
           {/* Generate Instruction */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="app-card p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
             <button
               onClick={() => generateInstructionMutation.mutate()}
-              disabled={generateInstructionMutation.isPending || snag.status === 'instructed'}
-              className="w-full inline-flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:from-primary-700 hover:to-secondary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+              disabled={
+                generateInstructionMutation.isPending ||
+                snag.status === 'instructed' ||
+                snag.status === 'closed'
+              }
+              className="w-full inline-flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-primary-600 to-secondary-600 px-4 py-3 font-semibold text-white shadow-lg shadow-primary-500/20 transition-all hover:from-primary-700 hover:to-secondary-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Sparkles className="w-5 h-5" />
               <span>
@@ -187,10 +208,39 @@ export default function SnagDetail() {
                 Unable to generate instruction. Confirm the snag has valid contract and defect type details.
               </p>
             )}
+            <button
+              onClick={() => {
+                if (window.confirm('Mark this snag as attended and close it?')) {
+                  markAttendedMutation.mutate()
+                }
+              }}
+              disabled={markAttendedMutation.isPending || snag.status === 'closed'}
+              className="btn-soft mt-3 w-full border-emerald-200 bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              <span>{markAttendedMutation.isPending ? 'Closing...' : 'Mark as Attended'}</span>
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm('Delete this snag? This action cannot be undone.')) {
+                  deleteSnagMutation.mutate()
+                }
+              }}
+              disabled={deleteSnagMutation.isPending}
+              className="btn-danger-soft mt-3 w-full"
+            >
+              <Trash2 className="w-5 h-5" />
+              <span>{deleteSnagMutation.isPending ? 'Deleting...' : 'Delete Snag'}</span>
+            </button>
+            {(markAttendedMutation.isError || deleteSnagMutation.isError) && (
+              <p className="mt-3 text-xs text-center text-red-600">
+                Unable to complete action. Please retry and check backend/API key configuration.
+              </p>
+            )}
           </div>
 
           {/* Quick Info */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="app-card p-6">
             <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Info</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
