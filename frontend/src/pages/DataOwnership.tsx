@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Download, RefreshCw, ShieldCheck, Upload, DatabaseBackup, HardDriveDownload } from 'lucide-react'
 import {
   exportLocalDbJson,
   importLocalDbJson,
   isLocalStorageMode,
   resetLocalDb,
+  snagsApi,
 } from '../lib/api'
 import {
   downloadFromGoogleDrive,
@@ -20,15 +22,53 @@ const defaultFilename = () => {
 
 export default function DataOwnership() {
   const localModeEnabled = useMemo(() => isLocalStorageMode(), [])
+  const queryClient = useQueryClient()
   const [statusMessage, setStatusMessage] = useState<string>('')
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [busy, setBusy] = useState(false)
+  const [newProjectName, setNewProjectName] = useState('')
+  const [newContractName, setNewContractName] = useState('')
+  const [selectedProjectId, setSelectedProjectId] = useState('')
 
   const [googleToken, setGoogleToken] = useState('')
   const [googleFileId, setGoogleFileId] = useState('')
 
   const [oneDriveToken, setOneDriveToken] = useState('')
   const [oneDriveItemId, setOneDriveItemId] = useState('')
+
+  const { data: metaOptions } = useQuery({
+    queryKey: ['snag-meta-options'],
+    queryFn: () => snagsApi.getMetaOptions().then((res) => res.data),
+    enabled: localModeEnabled,
+  })
+
+  const createProjectMutation = useMutation({
+    mutationFn: (name: string) => snagsApi.createProjectOption(name).then((res) => res.data),
+    onSuccess: (project) => {
+      setStatusMessage(`Project created: ${project.name}`)
+      setErrorMessage('')
+      setNewProjectName('')
+      setSelectedProjectId(project.id)
+      queryClient.invalidateQueries({ queryKey: ['snag-meta-options'] })
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to create project.')
+    },
+  })
+
+  const createContractMutation = useMutation({
+    mutationFn: ({ projectId, label }: { projectId: string; label: string }) =>
+      snagsApi.createContractOption(projectId, label).then((res) => res.data),
+    onSuccess: (contract) => {
+      setStatusMessage(`Contract created: ${contract.label}`)
+      setErrorMessage('')
+      setNewContractName('')
+      queryClient.invalidateQueries({ queryKey: ['snag-meta-options'] })
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to create contract.')
+    },
+  })
 
   const clearNotices = () => {
     setStatusMessage('')
@@ -110,6 +150,7 @@ export default function DataOwnership() {
 
   const resetWorkspace = async () => {
     resetLocalDb()
+    setSelectedProjectId('')
     setStatusMessage('Local workspace reset complete.')
   }
 
@@ -139,6 +180,108 @@ export default function DataOwnership() {
           {errorMessage}
         </div>
       )}
+
+      <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <DatabaseBackup className="w-5 h-5 text-primary-600" />
+          <h2 className="text-lg font-semibold text-gray-900">Project and Contract Setup</h2>
+        </div>
+        <p className="text-sm text-gray-600">
+          In local mode, you can create your own project and contract options directly here.
+        </p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-gray-700">Create project</label>
+            <div className="flex gap-2">
+              <input
+                value={newProjectName}
+                onChange={(event) => setNewProjectName(event.target.value)}
+                placeholder="Project name"
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <button
+                disabled={!localModeEnabled || busy || createProjectMutation.isPending || !newProjectName.trim()}
+                onClick={() => createProjectMutation.mutate(newProjectName)}
+                className="px-3 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50 disabled:opacity-50"
+              >
+                {createProjectMutation.isPending ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-gray-700">Create contract</label>
+            <select
+              value={selectedProjectId}
+              onChange={(event) => setSelectedProjectId(event.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            >
+              <option value="">Select project for contract</option>
+              {metaOptions?.projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <input
+                value={newContractName}
+                onChange={(event) => setNewContractName(event.target.value)}
+                placeholder="Contract name"
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <button
+                disabled={
+                  !localModeEnabled ||
+                  busy ||
+                  createContractMutation.isPending ||
+                  !newContractName.trim() ||
+                  !selectedProjectId
+                }
+                onClick={() =>
+                  createContractMutation.mutate({
+                    projectId: selectedProjectId,
+                    label: newContractName,
+                  })
+                }
+                className="px-3 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50 disabled:opacity-50"
+              >
+                {createContractMutation.isPending ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">Current projects</p>
+            <div className="rounded-lg border border-gray-200 p-3 max-h-36 overflow-auto">
+              {metaOptions?.projects.length ? (
+                <ul className="space-y-1 text-sm text-gray-700">
+                  {metaOptions.projects.map((project) => (
+                    <li key={project.id}>{project.name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No projects yet.</p>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">Current contracts</p>
+            <div className="rounded-lg border border-gray-200 p-3 max-h-36 overflow-auto">
+              {metaOptions?.contracts.length ? (
+                <ul className="space-y-1 text-sm text-gray-700">
+                  {metaOptions.contracts.map((contract) => (
+                    <li key={contract.id}>{contract.label}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No contracts yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
         <div className="flex items-center gap-2">

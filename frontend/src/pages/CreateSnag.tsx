@@ -2,9 +2,9 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Save, AlertTriangle } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { snagsApi } from '../lib/api'
+import { isLocalStorageMode, snagsApi } from '../lib/api'
 import { useForm } from 'react-hook-form'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 interface SnagFormData {
   title: string
@@ -20,6 +20,10 @@ interface SnagFormData {
 export default function CreateSnag() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [newProjectName, setNewProjectName] = useState('')
+  const [newContractName, setNewContractName] = useState('')
+  const [metaActionError, setMetaActionError] = useState('')
+  const localModeEnabled = useMemo(() => isLocalStorageMode(), [])
   const { register, handleSubmit, watch, getValues, setValue, formState: { errors } } = useForm<SnagFormData>({
     defaultValues: {
       severity: 'med',
@@ -50,6 +54,33 @@ export default function CreateSnag() {
     onSuccess: (snag) => {
       queryClient.invalidateQueries({ queryKey: ['snags'] })
       navigate(`/app/snags/${snag.id}`)
+    },
+  })
+
+  const createProjectMutation = useMutation({
+    mutationFn: (name: string) => snagsApi.createProjectOption(name).then((res) => res.data),
+    onSuccess: (project) => {
+      setMetaActionError('')
+      setNewProjectName('')
+      queryClient.invalidateQueries({ queryKey: ['snag-meta-options'] })
+      setValue('project_id', project.id)
+    },
+    onError: (error) => {
+      setMetaActionError(error instanceof Error ? error.message : 'Unable to add project.')
+    },
+  })
+
+  const createContractMutation = useMutation({
+    mutationFn: ({ projectId, label }: { projectId: string; label: string }) =>
+      snagsApi.createContractOption(projectId, label).then((res) => res.data),
+    onSuccess: (contract) => {
+      setMetaActionError('')
+      setNewContractName('')
+      queryClient.invalidateQueries({ queryKey: ['snag-meta-options'] })
+      setValue('contract_id', contract.id)
+    },
+    onError: (error) => {
+      setMetaActionError(error instanceof Error ? error.message : 'Unable to add contract.')
     },
   })
 
@@ -124,6 +155,12 @@ export default function CreateSnag() {
           </div>
         )}
 
+        {metaActionError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {metaActionError}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <label htmlFor="project_id" className="block text-sm font-medium text-gray-700 mb-2">
@@ -143,6 +180,28 @@ export default function CreateSnag() {
             </select>
             {errors.project_id && (
               <p className="mt-1 text-sm text-red-600">{errors.project_id.message}</p>
+            )}
+            <div className="mt-3 flex gap-2">
+              <input
+                type="text"
+                value={newProjectName}
+                onChange={(event) => setNewProjectName(event.target.value)}
+                placeholder="New project name"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <button
+                type="button"
+                disabled={!localModeEnabled || createProjectMutation.isPending || !newProjectName.trim()}
+                onClick={() => createProjectMutation.mutate(newProjectName)}
+                className="px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {createProjectMutation.isPending ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+            {!localModeEnabled && (
+              <p className="mt-1 text-xs text-gray-500">
+                Add project is available in local mode. For remote mode, create project in backend.
+              </p>
             )}
           </div>
 
@@ -164,6 +223,36 @@ export default function CreateSnag() {
             </select>
             {errors.contract_id && (
               <p className="mt-1 text-sm text-red-600">{errors.contract_id.message}</p>
+            )}
+            <div className="mt-3 flex gap-2">
+              <input
+                type="text"
+                value={newContractName}
+                onChange={(event) => setNewContractName(event.target.value)}
+                placeholder="New contract name"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <button
+                type="button"
+                disabled={
+                  !localModeEnabled ||
+                  createContractMutation.isPending ||
+                  !newContractName.trim() ||
+                  !watch('project_id')
+                }
+                onClick={() =>
+                  createContractMutation.mutate({
+                    projectId: watch('project_id'),
+                    label: newContractName,
+                  })
+                }
+                className="px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {createContractMutation.isPending ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+            {!watch('project_id') && (
+              <p className="mt-1 text-xs text-gray-500">Select a project first to add a contract.</p>
             )}
           </div>
         </div>

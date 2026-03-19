@@ -341,6 +341,62 @@ export const snagsApi = {
       users: db.users,
     })
   },
+
+  createProjectOption: (name: string) => {
+    if (!isLocalMode) {
+      return Promise.reject(new Error('Project creation from this screen is only available in local mode.'))
+    }
+    const normalized = name.trim()
+    if (!normalized) {
+      return Promise.reject(new Error('Project name is required.'))
+    }
+
+    const db = readLocalDb()
+    const existing = db.projects.find((project) => project.name.toLowerCase() === normalized.toLowerCase())
+    if (existing) {
+      return asResponse(existing)
+    }
+
+    const created: SnagFormOption = {
+      id: newId(),
+      name: normalized,
+    }
+    db.projects.push(created)
+    writeLocalDb(db)
+    return asResponse(created)
+  },
+
+  createContractOption: (projectId: string, label: string) => {
+    if (!isLocalMode) {
+      return Promise.reject(new Error('Contract creation from this screen is only available in local mode.'))
+    }
+    const normalized = label.trim()
+    if (!projectId) {
+      return Promise.reject(new Error('Project must be selected before adding a contract.'))
+    }
+    if (!normalized) {
+      return Promise.reject(new Error('Contract name is required.'))
+    }
+
+    const db = readLocalDb()
+    const existing = db.contracts.find(
+      (contract) =>
+        contract.project_id === projectId &&
+        contract.label.toLowerCase() === normalized.toLowerCase()
+    )
+    if (existing) {
+      return asResponse(existing)
+    }
+
+    const created: ContractOption = {
+      id: newId(),
+      project_id: projectId,
+      label: normalized,
+    }
+    db.contracts.push(created)
+    writeLocalDb(db)
+    return asResponse(created)
+  },
 }
 
 export const instructionsApi = {
