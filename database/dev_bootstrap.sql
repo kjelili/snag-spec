@@ -12,7 +12,7 @@ DECLARE
     v_edition_id UUID;
     v_contract_id UUID;
 BEGIN
-    -- Organization
+    -- Organization (lowercase enum values to match Python models)
     SELECT id INTO v_org_id
     FROM organizations
     WHERE name = 'Demo Architect Practice'
@@ -20,30 +20,32 @@ BEGIN
 
     IF v_org_id IS NULL THEN
         INSERT INTO organizations (id, name, type)
-        VALUES (gen_random_uuid(), 'Demo Architect Practice', 'ARCHITECT_PRACTICE')
+        VALUES (gen_random_uuid(), 'Demo Architect Practice', 'architect_practice')
         RETURNING id INTO v_org_id;
     END IF;
 
-    -- User
+    -- User (lowercase enum values)
     SELECT id INTO v_user_id
     FROM users
     WHERE email = 'architect@demo.local'
     LIMIT 1;
 
     IF v_user_id IS NULL THEN
-        INSERT INTO users (id, organization_id, name, email, role, is_active)
+        INSERT INTO users (id, organization_id, name, email, role, is_active, password_hash)
         VALUES (
             gen_random_uuid(),
             v_org_id,
             'Lead Architect',
             'architect@demo.local',
-            'ARCHITECT',
-            true
+            'architect',
+            true,
+            -- bcrypt hash of 'demo123' for development convenience
+            '$2b$12$LJ3m4ys4Fp.VWxQLOAaZxuKxGRS5F/untjGnuaUiDen1fvwLSAqGy'
         )
         RETURNING id INTO v_user_id;
     END IF;
 
-    -- Project
+    -- Project (lowercase enum values)
     SELECT id INTO v_project_id
     FROM projects
     WHERE name = 'Demo Tower Refurbishment'
@@ -56,7 +58,7 @@ BEGIN
             v_org_id,
             'Demo Tower Refurbishment',
             'Europe/London',
-            'CONSTRUCTION'
+            'construction'
         )
         RETURNING id INTO v_project_id;
     END IF;

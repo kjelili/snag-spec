@@ -3,23 +3,24 @@ Application configuration settings
 """
 
 import json
-from typing import List
+import secrets
+from typing import List, Optional
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     """Application settings"""
-    
+
     # Application
     APP_NAME: str = "Snag-to-Spec"
     DEBUG: bool = True
-    
+
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/snagtospec"
-    
-    # Security
-    SECRET_KEY: str = "local-development-secret-key-change-me"
+
+    # Security — no default; must always be set via env
+    SECRET_KEY: str = ""
     API_KEY: str = ""
     DEFAULT_USER_ID: str = ""
     ALGORITHM: str = "HS256"
@@ -27,15 +28,15 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: List[str] | str = Field(
         default_factory=lambda: ["localhost", "127.0.0.1", "*.vercel.app", "*.onrender.com"]
     )
-    
+
     # CORS
     CORS_ORIGINS: List[str] | str = Field(
         default_factory=lambda: ["http://localhost:3000", "http://localhost:5173"]
     )
-    
+
     # OpenAI
-    OPENAI_API_KEY: str = ""  # Set via environment variable
-    
+    OPENAI_API_KEY: str = ""
+
     # File Storage
     UPLOAD_DIR: str = "./uploads"
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
@@ -66,13 +67,20 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_security_requirements(self):
+        # In DEBUG mode, auto-generate a SECRET_KEY if missing so devs can start fast
+        if not self.SECRET_KEY:
+            if self.DEBUG:
+                self.SECRET_KEY = secrets.token_urlsafe(48)
+            else:
+                raise ValueError(
+                    "SECRET_KEY must be set via environment variable when DEBUG is False"
+                )
+
         if not self.DEBUG:
-            if self.SECRET_KEY == "local-development-secret-key-change-me":
-                raise ValueError("SECRET_KEY must be set to a secure value when DEBUG is False")
             if not self.API_KEY:
                 raise ValueError("API_KEY must be configured when DEBUG is False")
         return self
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = True

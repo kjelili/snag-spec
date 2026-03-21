@@ -3,11 +3,14 @@ Main API router
 """
 
 from fastapi import APIRouter
-from app.api.v1 import snags, instructions
+from app.api.v1 import snags, instructions, auth
 
 api_router = APIRouter()
 
-# Include routers
+# Auth routes (no API key required)
+api_router.include_router(auth.router)
+
+# Resource routes
 api_router.include_router(snags.router)
 api_router.include_router(instructions.router)
 

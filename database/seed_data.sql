@@ -1,5 +1,5 @@
 -- Seed data for Snag-to-Spec application
--- This file contains initial reference data for contract forms, defect types, and clause tags
+-- Enum values use lowercase to match Python model definitions exactly.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -42,21 +42,21 @@ INSERT INTO clause_tags (id, name) VALUES
     (gen_random_uuid(), 'removal_replacement')
 ON CONFLICT (name) DO NOTHING;
 
--- Defect Types (starter pack)
+-- Defect Types (lowercase enum values: defectcategory and severitylevel)
 INSERT INTO defect_types (id, name, category, default_severity, typical_keywords)
 SELECT gen_random_uuid(), v.name, v.category::defectcategory, v.default_severity::severitylevel, v.typical_keywords
 FROM (
     VALUES
-        ('Fire stopping non-compliance', 'COMPLIANCE', 'CRITICAL', ARRAY['fire stopping', 'fire seal', 'compartmentation', 'penetration']),
-        ('Compartmentation/doors/fire rating non-compliance', 'COMPLIANCE', 'CRITICAL', ARRAY['fire door', 'fire rating', 'compartment', 'FD30', 'FD60']),
-        ('Waterproofing/water ingress', 'QUALITY', 'HIGH', ARRAY['water ingress', 'leak', 'damp', 'waterproofing', 'moisture']),
-        ('Structural cracking/movement', 'SAFETY', 'HIGH', ARRAY['crack', 'structural', 'movement', 'settlement', 'deflection']),
-        ('MEP functional failure', 'QUALITY', 'HIGH', ARRAY['MEP', 'mechanical', 'electrical', 'plumbing', 'not working', 'failure']),
-        ('Spec/drawing non-conformance', 'QUALITY', 'MED', ARRAY['not to spec', 'wrong', 'incorrect', 'not per drawing']),
-        ('Workmanship finish defects', 'QUALITY', 'MED', ARRAY['finish', 'finishing', 'cosmetic', 'appearance', 'quality of finish']),
-        ('Incomplete works', 'INCOMPLETE', 'MED', ARRAY['incomplete', 'missing', 'not finished', 'outstanding']),
-        ('Damage to completed work', 'DAMAGE', 'MED', ARRAY['damaged', 'damage', 'scratched', 'dent', 'broken']),
-        ('Access/maintenance non-compliance', 'COMPLIANCE', 'MED', ARRAY['access', 'maintenance', 'clearance', 'space'])
+        ('Fire stopping non-compliance', 'compliance', 'critical', ARRAY['fire stopping', 'fire seal', 'compartmentation', 'penetration']),
+        ('Compartmentation/doors/fire rating non-compliance', 'compliance', 'critical', ARRAY['fire door', 'fire rating', 'compartment', 'FD30', 'FD60']),
+        ('Waterproofing/water ingress', 'quality', 'high', ARRAY['water ingress', 'leak', 'damp', 'waterproofing', 'moisture']),
+        ('Structural cracking/movement', 'safety', 'high', ARRAY['crack', 'structural', 'movement', 'settlement', 'deflection']),
+        ('MEP functional failure', 'quality', 'high', ARRAY['MEP', 'mechanical', 'electrical', 'plumbing', 'not working', 'failure']),
+        ('Spec/drawing non-conformance', 'quality', 'med', ARRAY['not to spec', 'wrong', 'incorrect', 'not per drawing']),
+        ('Workmanship finish defects', 'quality', 'med', ARRAY['finish', 'finishing', 'cosmetic', 'appearance', 'quality of finish']),
+        ('Incomplete works', 'incomplete', 'med', ARRAY['incomplete', 'missing', 'not finished', 'outstanding']),
+        ('Damage to completed work', 'damage', 'med', ARRAY['damaged', 'damage', 'scratched', 'dent', 'broken']),
+        ('Access/maintenance non-compliance', 'compliance', 'med', ARRAY['access', 'maintenance', 'clearance', 'space'])
 ) AS v(name, category, default_severity, typical_keywords)
 WHERE NOT EXISTS (
     SELECT 1

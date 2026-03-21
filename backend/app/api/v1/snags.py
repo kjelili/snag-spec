@@ -1,17 +1,17 @@
 """
-Snag API endpoints
+Snag API endpoints — with JWT auth, pagination, and user ownership.
 """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from app.core.database import get_db
-from app.core.config import settings
 from app.core.security import require_api_key
+from app.core.auth import get_current_user
 from app.schemas.snag import SnagCreate, SnagUpdate, SnagResponse, LocationCreate, LocationResponse
 from app.models.snag import Snag, Location, DefectType
 from app.models.contract import Contract
@@ -22,6 +22,10 @@ from app.services.clause_service import ClauseService
 
 router = APIRouter(prefix="/snags", tags=["snags"])
 logger = logging.getLogger(__name__)
+
+# FIX #22: Default and max page sizes
+DEFAULT_PAGE_SIZE = 50
+MAX_PAGE_SIZE = 200
 
 
 @router.get("/meta/options", response_model=dict)
@@ -40,7 +44,6 @@ async def get_snag_meta_options(
         users = db.query(User).filter(User.is_active.is_(True)).order_by(User.name.asc()).all()
     except SQLAlchemyError:
         logger.exception("Failed to fetch snag metadata options")
-        # Return empty option sets instead of 500 so frontend can render safely.
         return {
             "projects": [],
             "contracts": [],
@@ -67,28 +70,13 @@ async def get_snag_meta_options(
 async def create_snag(
     snag_data: SnagCreate,
     db: Session = Depends(get_db),
-    _: None = Depends(require_api_key),
-    # TODO: Add authentication - current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    """Create a new snag"""
+    """Create a new snag. The authenticated user is set as creator."""
     create_payload = snag_data.dict()
-    creator_id = create_payload.get("created_by")
-    selected_creator = None
+    # Always use the authenticated user as creator
+    create_payload["created_by"] = current_user.id
 
-    if creator_id:
-        selected_creator = db.query(User).filter(User.id == creator_id).first()
-    elif settings.DEFAULT_USER_ID:
-        selected_creator = db.query(User).filter(User.id == settings.DEFAULT_USER_ID).first()
-    else:
-        selected_creator = db.query(User).filter(User.is_active.is_(True)).order_by(User.created_at.asc()).first()
-
-    if not selected_creator:
-        raise HTTPException(
-            status_code=400,
-            detail="No valid creator available. Provide created_by or configure DEFAULT_USER_ID.",
-        )
-
-    create_payload["created_by"] = selected_creator.id
     snag = Snag(**create_payload)
     db.add(snag)
     db.commit()
@@ -110,11 +98,13 @@ async def get_snag(
 
 @router.get("/", response_model=List[SnagResponse])
 async def list_snags(
-    project_id: UUID = None,
-    status: str = None,
+    project_id: Optional[UUID] = None,
+    status: Optional[str] = None,
+    limit: int = Query(default=DEFAULT_PAGE_SIZE, le=MAX_PAGE_SIZE, ge=1),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
-    """List snags with optional filters"""
+    """List snags with optional filters and pagination."""
     query = db.query(Snag)
     if project_id:
         query = query.filter(Snag.project_id == project_id)
@@ -122,7 +112,12 @@ async def list_snags(
         query = query.filter(Snag.status == status)
 
     try:
-        rows = query.order_by(Snag.discovered_at.desc()).all()
+        rows = (
+            query.order_by(Snag.discovered_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
     except SQLAlchemyError:
         logger.exception("Failed to query snags list")
         return []
@@ -142,17 +137,17 @@ async def update_snag(
     snag_id: UUID,
     snag_data: SnagUpdate,
     db: Session = Depends(get_db),
-    _: None = Depends(require_api_key),
+    current_user: User = Depends(get_current_user),
 ):
     """Update a snag"""
     snag = db.query(Snag).filter(Snag.id == snag_id).first()
     if not snag:
         raise HTTPException(status_code=404, detail="Snag not found")
-    
+
     update_data = snag_data.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(snag, field, value)
-    
+
     db.commit()
     db.refresh(snag)
     return snag
@@ -162,7 +157,7 @@ async def update_snag(
 async def delete_snag(
     snag_id: UUID,
     db: Session = Depends(get_db),
-    _: None = Depends(require_api_key),
+    current_user: User = Depends(get_current_user),
 ):
     """Delete a snag and unlink related instructions."""
     snag = db.query(Snag).filter(Snag.id == snag_id).first()
@@ -188,7 +183,7 @@ async def delete_snag(
 async def create_location(
     location_data: LocationCreate,
     db: Session = Depends(get_db),
-    _: None = Depends(require_api_key),
+    current_user: User = Depends(get_current_user),
 ):
     """Create a new location"""
     location = Location(**location_data.dict())
@@ -207,21 +202,20 @@ async def get_snag_clause_suggestions(
     snag = db.query(Snag).filter(Snag.id == snag_id).first()
     if not snag:
         raise HTTPException(status_code=404, detail="Snag not found")
-    
+
     if not snag.defect_type_id or not snag.contract_id:
         return []
-    
+
     contract = db.query(Contract).filter(Contract.id == snag.contract_id).first()
     if not contract:
         return []
-    
-    # Get contract_edition_id from contract
+
     clause_service = ClauseService(db)
     clauses = clause_service.map_defect_to_clauses(
         str(snag.defect_type_id),
         str(contract.contract_edition_id)
     )
-    
+
     return [
         {
             "id": str(clause.id),
